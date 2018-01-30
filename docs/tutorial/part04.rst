@@ -5,13 +5,13 @@ How to query the Neo4j database with Neomodel.
 Intro.
 ======
 
-I assume that you know how to create a django project and how to init and setup a django app inside this project.
-If you don’t have a clue of what I said, I recommend to come back after reading the django intro tutorial and start
+I assume that you know how to create a Django project and how to init and setup a Django app inside this project.
+If you don’t have a clue of what I said, I recommend to come back after reading the Django intro tutorial and start
 again from part one of this tutorial: https://docs.djangoproject.com/en/1.11/intro/
 
-At this point of the tutorial you should have already created and setup the paradise_paper_search django project and
-the fetch_api django app(:doc:`Part 1 <part01>`). Also you learned how to integrate the Neomodel OGM into the django project(:doc:`Part 2 <part02>`).
-And at :doc:`Part 3 <part03>` you learned the way a Neo4j Graph Database is modeled using Neomodel and ended with a serie of python
+At this point of the tutorial, you should have already created and setup the paradise_paper_search Django project and
+the fetch_api Django app(:doc:`Part 1 <part01>`). Also you learned how to integrate the Neomodel OGM into the Django project(:doc:`Part 2 <part02>`).
+At :doc:`Part 3 <part03>` you learned the way a Neo4j Graph Database is modeled using Neomodel and ended with a serie of python
 classes definitions that represent the nodes, properties and relationships of the Paradise Paper Graph Database(PPGDB).
 
 Current project structure::
@@ -27,50 +27,47 @@ Current project structure::
     │   │   └── __init__.py
     │   ├── models/
     │   │   ├── __init__.py
-    │   │   ├── Address.py
-    │   │   ├── Entity.py
-    │   │   ├── Intermediary.py
-    │   │   ├── Officer.py
-    │   │   └── Other.py
+    │   │   ├── address.py
+    │   │   ├── entity.py
+    │   │   ├── intermediary.py
+    │   │   ├── officer.py
+    │   │   └── other.py
     │   ├── tests.py
     │   ├── urls.py
     │   └── views.py
     └── manage.py
 
-Now, how you actually query a graph database inside your django project or apps?
+Now, how you actually query a graph database inside your Django project or apps?
 
-Using the your model definitions
+Using your models
 ===================================
 
-Using your model definitions is pretty standard. You usually just import the ones you need and use them.
-For example in your django views. Before we get to that we need to learn the Neomodel Query API,
-this API will allow us to express queries to the database without having to write them in plain Cypher.
+Using your models is pretty standard. You usually just import the ones you need and use them, for example,
+in your Django views. Before we get to that, we need to learn the Neomodel Query API.
+This API will allow us to express queries to the database without having to write them in plain Cypher.
 
-We will learn to query using the Paradise Paper model definitions we did before. To do that we will first use an instance of the
-python interpreter.
+We will learn to query using the Paradise Paper models we did before.
+To do that we will first use an instance of the python interpreter.
 
 The project python interpreter:
 ---------------------------------------
 
-Let's open the python interpreter through our django project ``manage.py`` which will
+Let's open the python interpreter through our Django project ``manage.py`` which will
 import our project settings(remember you set the DATABASE_URL in there, this is needed to connect to the db).
-Also it will try to use ipython or bpython if available.
+Also, it will try to use ipython or bpython if available.
 
 First let’s start opening the console, if necessary.
 
 Then make sure you are at the ``paradise_papers_search`` root directory
-where you created the django project(where you ``manage.py`` module is).
+where you created the Django project(where the ``manage.py`` module is).
 
 Run the command::
 
         python manage.py shell
 
 
-Now in order to use our model definitions we need to import them.
-Here all the model entities we will import: Entity, Intermediary, Officer, Address and Other.
-Each entity maps to a specific structure of a node label, property keys and relationship types in the PPGDB.
-
-Run the following python import commands::
+With the python interpreter at hand, we can import our models and start to use them as soon as we execute
+the following python import commands::
 
     from fetch_api.models import Entity
     from fetch_api.models import Intermediary
@@ -78,14 +75,50 @@ Run the following python import commands::
     from fetch_api.models import Address
     from fetch_api.models import Other
 
-Okay, now we are actually ready to start exploring the Paradise Paper Graph Database through the Neomodel Query API.
+Each of the models we just imported maps to a specific structure of a node label, property keys and relationship types in the PPGDB.
+Now we are actually ready to start exploring the Paradise Paper Graph Database through the Neomodel Query API.
 
 ..  todo::
     Put screenshot image of the console here.
 
 Neomodel Query API
 ==================
-Each of your model definitions have a set of...
+Each of your models have some properties and methods(inherited from StructureNode or DjangoNode)
+that help us to express queries to the Neo4j database.
+
+The NodeSet object under the ``.nodes`` class property.
+--------------------------------------------------------
+The ``.nodes`` property store a NodeSet object. This NoseSet represent all the nodes mapped under a model.
+If we wanted to count all the Entity nodes that are stored in the database, we just call the ``len`` python function
+over the ``Entity.nodes`` nodeset.
+
+Example::
+
+    len(Entity.nodes)
+
+When we call ``len(Entity.nodes)``, Neomodel will generate a cypher query that express we want to match and count
+all the nodes with the label ``Entity``. Then that query is executed in the Neo4j database and we get back the count.
+The cypher query string that is generated by Neomodel behind the scene is::
+
+    MATCH (n:Entity) RETURN COUNT(n)
+
+.. note::
+    We are not retrieving all the nodes from the database and then count them. The actual counting is done by the
+    Neo4j database engine which is faster.
+
+Another example, to get count of all the nodes that exist in the PPGDB database::
+
+    len(Entity.nodes) + len(Officer.nodes) + len(Intermediary.nodes) + len(Address.nodes) + len(Other.nodes)
+
+
+
+Retrieving nodes
+----------------
+In order to retrieve the nodes
+
+
+Filtering nodes
+---------------
 
 
 Exploring the Paradise Paper Graph Database
