@@ -5,14 +5,17 @@ How to query the Neo4j database with Neomodel.
 Intro.
 ======
 
-I assume that you know how to create a Django project and how to init and setup a Django app inside this project.
-If you don’t have a clue of what I said, I recommend to come back after reading the Django intro tutorial and start
-again from part one of this tutorial: https://docs.djangoproject.com/en/1.11/intro/
+I assume that you know how to create a Django project and how to init and setup a Django app inside
+this project. If you don’t have a clue of what I said, I recommend to come back after reading the
+Django intro tutorial and start again from part one of this tutorial:
+https://docs.djangoproject.com/en/1.11/intro/
 
-At this point of the tutorial, you should have already created and setup the paradise_paper_search Django project and
-the fetch_api Django app(:doc:`Part 1 <part01>`). You learned how to integrate the Neomodel OGM into the Django project(:doc:`Part 2 <part02>`).
-Also, at :doc:`Part 3 <part03>` you learned the way a Neo4j Graph Database is modeled using Neomodel and ended with a serie of python
-classes definitions that represent the nodes, properties and relationships of the Paradise Paper Graph Database(PPGDB).
+At this point of the tutorial, you should have already created and setup the paradise_paper_search
+Django project and the fetch_api Django app(:doc:`Part 1 <part01>`). You learned how to integrate
+the Neomodel OGM into the Django project(:doc:`Part 2 <part02>`). Also, at :doc:`Part 3 <part03>`
+you learned the way a Neo4j Graph Database is modeled using Neomodel and ended with a serie of
+python class definitions that represent the nodes, properties and relationships of the
+Paradise Paper Graph Database(PPGDB).
 
 Current project structure::
 
@@ -42,9 +45,9 @@ Now, how you actually query a graph database inside your Django project or apps?
 Using your models
 ===================================
 
-Using your models is pretty standard. You usually just import the ones you need and use them, for example,
-in your Django views. Before we get to that, we need to learn the Neomodel Query API.
-This API will allow us to express queries to the database without having to write them in plain Cypher.
+Using your models is pretty standard. You usually just import the ones you need and use them, for
+example, in your Django views. Before we get to that, we need to learn the Neomodel Query API. This
+API will allow us to express queries to the database without having to write them in plain Cypher.
 
 We will learn to query using the Paradise Paper models we did before.
 To do that we will first use an instance of the python interpreter.
@@ -52,8 +55,8 @@ To do that we will first use an instance of the python interpreter.
 The project python interpreter:
 ---------------------------------------
 
-Let's open the python interpreter through our Django project ``manage.py`` which will
-import our project settings(remember you set the DATABASE_URL in there, this is needed to connect to the db).
+Let's open the python interpreter through our Django project ``manage.py`` which will import our
+project settings(remember you set the DATABASE_URL in there, this is needed to connect to the db).
 Also, it will try to use ipython or bpython if available.
 
 First let’s start opening the console, if necessary.
@@ -66,8 +69,8 @@ Run the command::
         python manage.py shell
 
 
-With the python interpreter at hand, we can import our models and start to use them as soon as we execute
-the following python import commands::
+With the python interpreter at hand, we can import our models and start to use them as soon as we
+execute the following python import commands::
 
     from fetch_api.models import Entity
     from fetch_api.models import Intermediary
@@ -75,8 +78,9 @@ the following python import commands::
     from fetch_api.models import Address
     from fetch_api.models import Other
 
-Each of the models we just imported maps to a specific structure of a node label, property keys and relationship types in the PPGDB.
-Now we are actually ready to start exploring the Paradise Paper Graph Database through the Neomodel Query API.
+Each of the models we just imported maps to a specific structure of a node label, property keys and
+relationship types in the PPGDB. Now we are actually ready to start exploring the
+Paradise Paper Graph Database through the Neomodel Query API.
 
 ..  todo::
     Put screenshot image of the console here.
@@ -88,40 +92,45 @@ that help us to express queries to the Neo4j database.
 
 NodeSet and Nodes Neomodel objects
 --------------------------------------------------------
-A *NodeSet* object represent a set of nodes matching common query parameters or filters.
+A *NodeSet* object represents a set of nodes matching common query parameters or filters.
 
-A *Node* object is an instance of one of our models. That mean we can access all the properties and methods defined on the model class.
-Each instance represent a single node in the database.
+A *Node* object is an instance of one of our models. That means we can access all the properties
+and methods defined on the model class. Each instance represents a single node in the database.
 
-The ``<Model>.nodes`` class property of each model store a NodeSet object. Each time access this ``.nodes`` property
-we get a brand new nodeset object, which means we get nodeset without any filters applied.
-Initially, before applying any filters, this noseset represent all the nodes mapped under a model(nodes labeled with the same class name).
-For instance, ``Entity.nodes`` contains all the nodes with the label Entity on the database.
+The ``<Model>.nodes`` class property of each model store a NodeSet object. Each time we access
+this ``.nodes`` property we get a brand new nodeset object, which means we get nodeset without any
+filters applied. Initially, before applying any filters, this noseset represents all the nodes
+mapped under a model(nodes labeled with the same class name). For instance, ``Entity.nodes``
+contains all the nodes with the label Entity on the database.
 
-Later we will see how we can apply filters in order to match an specific subset of nodes.
+Later we will see how we can apply filters in order to match a specific subset of nodes.
 
 Length of a NodeSet
 -------------------
-If we wanted to count all the Entity nodes that are stored in the database, we just call the ``len`` python function
-over the ``Entity.nodes`` nodeset.
+If we wanted to count all the Entity nodes that are stored in the database, we just call
+the ``len`` python function over the ``Entity.nodes`` nodeset.
 
 Example::
 
     len(Entity.nodes)
 
 When we call ``len(Entity.nodes)``, Neomodel will generate a cypher query that counts
-all the nodes with the label ``Entity``. Then that query is executed in the Neo4j database and we get back the count.
-The cypher query string that is generated by Neomodel behind the scene is::
+all the nodes with the label ``Entity``. Then that query is executed in the Neo4j database and
+we get back the count. The cypher query string that is generated by Neomodel behind the scene is::
 
     MATCH (n:Entity) RETURN COUNT(n)
 
 .. note::
-    We are not retrieving all the nodes from the database and then count them. The actual counting is done by the
-    Neo4j database engine which is faster.
+    We are not retrieving all the nodes from the database and then count them. The actual counting
+    is done by the Neo4j database engine which is faster.
 
 Another example, to get count of all the nodes that exist in the PPGDB database::
 
-    len(Entity.nodes) + len(Officer.nodes) + len(Intermediary.nodes) + len(Address.nodes) + len(Other.nodes)
+    len(Entity.nodes) \
+    + len(Officer.nodes) \
+    + len(Intermediary.nodes) \
+    + len(Address.nodes) \
+    + len(Other.nodes)
 
 ..  todo::
     Put screenshot image of the console here.
@@ -130,35 +139,39 @@ If nodeset is filtered, only nodes that fulfill the filters will be counted.
 
 Fetching nodes
 ----------------
-In order to retrieve the nodes, read their properties and relationships, actual cypher query need to be executed by Neomodel.
-This is handled completely by Neomodel and we just need to use its query API.
+In order to retrieve the nodes, read their properties and relationships, an actual cypher query need
+to be executed by Neomodel. This is handled completely by Neomodel and we just need to use its
+query API.
 
-A call to the NodeSet method ``.all()``, would return all the nodes of a nodeset; nevertheless this would result in an expensive
-query. The reason is that Neomodel will actually try to retrieve all the nodes at once. It is recommended to use ``.all()``
-when the nodeset is small. We can reduce the size by filtering the nodeset as will see in the later.
+A call to the NodeSet method ``.all()``, would return all the nodes of a nodeset; nevertheless
+this would result in an expensive query. The reason is that Neomodel will actually try to
+retrieve all the nodes at once. It is recommended to use ``.all()`` when the nodeset is small.
+We can reduce the size by filtering the nodeset as will see in the later.
 
-It is better to fetch the nodes in batches from a nodeset.
-The NodeSet objects support the same operators for indexing and slicing just like the normal python lists.
+It is better to fetch the nodes in batches from a nodeset. The NodeSet objects support the same
+operators for indexing and slicing just like the normal python lists.
 
 To get the first element of the ``Entity.nodes`` nodeset, we can reference its index::
 
     Entity.nodes[0]
 
-To get a subset of nodes, we can use the python slice syntax. This is convenient for writing code that retrieve the nodes in batches.
-For example to get the first 10 nodes in a list::
+To get a subset of nodes, we can use the python slice syntax. This is convenient for writing code
+that retrieve the nodes in batches. For example to get the first 10 nodes in a list::
 
     Entity.nodes[0:10]
 
 .. note::
     Neomodel will generate and execute cypher query only to retrieve the nodes we are asking for.
-    So we are not actually retrieving all the nodes at once from the database. An example of a cypher query string
-    generated by new model would be ``MATCH (n:Entity) RETURN n SKIP 10 LIMIT 10``
+    So we are not actually retrieving all the nodes at once from the database. An example of a
+    cypher query string generated by new model would be
+    ``MATCH (n:Entity) RETURN n SKIP 10 LIMIT 10``
 
 Finding nodes
 -------------
-If we know exactly what node we are looking for, for instance we have the node_id or the exact name property value,
-we can use the ``.get()`` or ``.get_or_none()`` nodeset methods. The difference is that if no match, the first one will raise
-a DoesNotExist exception and the second will return `None`.
+If we know exactly what node we are looking for, for instance we have the node_id or the exact name
+property value, we can use the ``.get()`` or ``.get_or_none()`` nodeset methods. The difference is
+that if no match, the first one will raise a DoesNotExist exception and the second will return
+`None`.
 
 To get the node which node_id is ``160380`` in a given nodeset::
 
@@ -166,12 +179,13 @@ To get the node which node_id is ``160380`` in a given nodeset::
     Entity.nodes.get(node_id=160380)
 
 .. warning::
-    These methods will raise MultipleNodesReturned exception if the property value used to get the node is not unique.
+    These methods will raise MultipleNodesReturned exception if the property value
+    used to get the node is not unique.
 
 Filtering nodes
 ---------------
-It is very probable that we want to get a subset of nodes that fulfill a specified condition. For example, getting all the
-Entity nodes which name property contains a specific word.
+It is very probable that we want to get a subset of nodes that fulfill a specified condition.
+For example, getting all the Entity nodes which name property contains a specific word.
 
 In order to filter nodes in a nodeset, we use the NodeSet method ``.filter```.
 The filter method borrows the same django filter format with double underscore prefixed operators.
@@ -180,17 +194,18 @@ To get Entity nodes which name property has the word "financial", we use the ope
 
     Entity.nodes.filter(name__contains='financial')
 
-The above statement will return a filtered nodeset, in order to actually retrieve the data see the Fetching Nodes section.
-For more prefixed operators refer to this page: http://neomodel.readthedocs.io/en/latest/queries.html#node-sets-and-filtering
+The above statement will return a filtered nodeset, in order to actually retrieve the data see
+the Fetching Nodes section. For more prefixed operators refer to this page:
+http://neomodel.readthedocs.io/en/latest/queries.html#node-sets-and-filtering
 
 Searching the Paradise Paper Graph Database
 ===========================================
-The purpose of this tutorial is to show you how we can use Neomodel with Django. In order to do that we will build a
-an app that will search the Paradise Paper Graph Database.
-With what we have learned so far is enough for our purpose. Now we will build some function utils that will help us search
-the PPGDB.
+The purpose of this tutorial is to show you how we can use Neomodel with Django. In order to do
+that we will build an app that will search the Paradise Paper Graph Database.
+With what we have learned so far is enough for our purpose. Now we will build some function utils
+that will help us search the PPGDB.
 
-To start coding, first let's create a new python module file under our ``fetch_api/`` directory.
+To start coding, first let's create a new python module under our ``fetch_api/`` directory.
 The next command will create a file named `utils.py`::
 
     touch fetch_api/utils.py
