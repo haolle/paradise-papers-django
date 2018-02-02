@@ -1,18 +1,36 @@
 from paradise_papers_search.constants import COUNTRIES, JURISDICTIONS, DATASOURCE
 
-from .models import MODEL_ENTITIES
+from .models import Entity
+from .models import Intermediary
+from .models import Officer
+from .models import Address
+from .models import Other
 
+
+# ow for easily access each of the model classes programmatically, let's create a key-value map.
+MODEL_ENTITIES = {
+    'Entity': Entity,
+    'Address': Address,
+    'Intermediary': Intermediary,
+    'Officer': Officer,
+    'Other': Other
+}
 
 ###################################################################
 # Queries Functions
 ###################################################################
 
-def filter_nodes(node_type, name, country, jurisdiction, source_id):
+def filter_nodes(node_type, search_text, country, jurisdiction, source_id):
     node_set = node_type.nodes
+
+    # On Address nodes we want to check the search_text against the address property
+    # For any other we check against the name property
     if node_type.__name__ == 'Address':
-        node_set.filter(address__icontains=name)
+        node_set.filter(address__icontains=search_text)
     else:
-        node_set.filter(name__icontains=name)
+        node_set.filter(name__icontains=search_text)
+
+    # Only entities store jurisdiction info
     if node_type.__name__ == 'Entity':
         node_set.filter(jurisdiction__icontains=jurisdiction)
 
@@ -40,13 +58,12 @@ def fetch_nodes(fetch_info):
     search_word     = fetch_info['name']
     country         = fetch_info['country']
     limit           = fetch_info['limit']
-    skip            = ((fetch_info['skip'] - 1) * limit)
+    start           = ((fetch_info['page'] - 1) * limit)
+    end             = start + limit
     jurisdiction    = fetch_info['jurisdiction']
     data_source     = fetch_info['sourceID']
     node_set        = filter_nodes(MODEL_ENTITIES[node_type], search_word, country, jurisdiction, data_source)
-    node_set.limit  = limit
-    node_set.skip   = skip
-    fetched_nodes   = node_set.all()
+    fetched_nodes   = node_set[start:end]
 
     return [node.serialize for node in fetched_nodes]
 

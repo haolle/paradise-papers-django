@@ -198,19 +198,157 @@ The above statement will return a filtered nodeset, in order to actually retriev
 the Fetching Nodes section. For more prefixed operators refer to this page:
 http://neomodel.readthedocs.io/en/latest/queries.html#node-sets-and-filtering
 
-Searching the Paradise Paper Graph Database
-===========================================
+Creating some utils to search the PPGDB
+=======================================
 The purpose of this tutorial is to show you how we can use Neomodel with Django. In order to do
 that we will build an app that will search the Paradise Paper Graph Database.
-With what we have learned so far is enough for our purpose. Now we will build some function utils
-that will help us search the PPGDB.
+With what we have learned so far is enough for our purpose.
+
+We will create some function utils that will help us search the PPGDB. Later, we will find ourselves
+importing and using these helper functions to fetch data from the DB in our Django views.
 
 To start coding, first let's create a new python module under our ``fetch_api/`` directory.
-The next command will create a file named `utils.py`::
+Name the file as `utils.py`
 
-    touch fetch_api/utils.py
+Now, as we will want to query the Neo4j database, we will import our models.
+Put the below import statements at the start of the `utils.py``::
+
+    from .models import Entity
+    from .models import Intermediary
+    from .models import Officer
+    from .models import Address
+    from .models import Other
+
+In order to easily access each of the model classes programmatically, let's create a key-value map.
+The key will be the model class name and the value will be the model class itself::
+
+    MODEL_ENTITIES = {
+        'Entity': Entity,
+        'Address': Address,
+        'Intermediary': Intermediary,
+        'Officer': Officer,
+        'Other': Other
+    }
+
+Filter Nodes Helper
+-------------------
+
+We will create a function that receive a model class and some filter parameters like *name, country
+jurisdiction and source_id*. Then this functin will return a filtered nodeset contaning only the
+model nodes that pass our filters.
+
+Let's add this helper function to the ``utils.py``, with the name ``filter_nodes``::
+
+    def filter_nodes(node_type, search_text, country, jurisdiction, source_id):
+        node_set = node_type.nodes
+
+        # On Address nodes we want to check the search_text against the address property
+        # For any other we check against the name property
+        if node_type.__name__ == 'Address':
+            node_set.filter(address__icontains=search_text)
+        else:
+            node_set.filter(name__icontains=search_text)
+
+        # Only entities store jurisdiction info
+        if node_type.__name__ == 'Entity':
+            node_set.filter(jurisdiction__icontains=jurisdiction)
+
+        node_set.filter(countries__icontains=country)
+        node_set.filter(sourceID__icontains=source_id)
+
+        return node_set
+
+Count Nodes Helper
+------------------
+
+We will create a function that return the length of the nodeset returned by the ``filter_nodes`` 
+helper we created before. It will receive a dictionary of filters.
+
+Here a representation of the required dictionary keys::
+
+    {
+        'node_type': '',
+        'name': '',
+        'country': '',
+        'jurisdiction': '',
+        'sourceID': ''
+    }
+
+Let's add this helper function to the ``utils.py``, with the name ``count_nodes``::
+
+    def count_nodes(count_info):
+        count = {}
+        node_type               = count_info['node_type']
+        search_word             = count_info['name']
+        country                 = count_info['country']
+        jurisdiction            = count_info['jurisdiction']
+        data_source             = count_info['sourceID']
+        node_set                = filter_nodes(MODEL_ENTITIES[node_type], search_word, country, jurisdiction, data_source)
+        count['count']          = len(node_set)
+
+        return count
+
+Fetch Nodes Helper
+------------------
+
+We will create a function that returns a subset of nodes filtered by the ``filter_nodes`` helper that we created previously. It will receive a dictionary of filters.
+
+Here a representation of the required dictionary keys::
+
+    {
+        'node_type': '',
+        'name': '',
+        'country': '',
+        'jurisdiction': '',
+        'sourceID': ''
+        'limit': 10,
+        'page': 1
+    }
+
+The ``limit`` and ``page`` filters are necesary to calculate the ``start`` and ``end`` values that
+we will use to get a subset of nodes from a nodeset. 
+Just like we learned in the Fetching Nodes section, we will return the nodes in batches using
+slice python syntax on the nodeset.
+
+Let's add this helper function to the ``utils.py``, with the name ``fetch_nodes``::
+
+    def fetch_nodes(fetch_info):
+        node_type       = fetch_info['node_type']
+        search_word     = fetch_info['name']
+        country         = fetch_info['country']
+        limit           = fetch_info['limit']
+        start           = ((fetch_info['page'] - 1) * limit)
+        end             = start + limit
+        jurisdiction    = fetch_info['jurisdiction']
+        data_source     = fetch_info['sourceID']
+        node_set        = filter_nodes(MODEL_ENTITIES[node_type], search_word, country, jurisdiction, data_source)
+        fetched_nodes   = node_set[start:end]
+
+        return fetched_nodes
+
+Fetch Node Details Helper
+-------------------------
+
+We will create a function that return a single node. It will receive a dictionary of filters with
+the ``node_type`` and the ``node_id``.
+
+Here a representation of the required dictionary keys::
+
+    {
+        'node_type': '',
+        'node_id': ''
+    }
+
+Let's add this helper function to the ``utils.py``, with the name ``fetch_node_details``::
+
+    def fetch_node_details(node_info):
+        node_type       = node_info['node_type']
+        node_id         = node_info['node_id']
+        node            = MODEL_ENTITIES[node_type].nodes.get(node_id=node_id)
+        node_details    = node
+
+        return node_details
+
 
 
 ...
-
-
