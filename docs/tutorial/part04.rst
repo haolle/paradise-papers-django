@@ -208,7 +208,7 @@ We will create some function utils that will help us search the PPGDB. Later, we
 importing and using these helper functions to fetch data from the DB in our Django views.
 
 To start coding, first let's create a new python module under our ``fetch_api/`` directory.
-Name the file as `utils.py`
+Name the file as ``utils.py``
 
 Now, as we will want to query the Neo4j database, we will import our models.
 Put the below import statements at the start of the `utils.py``::
@@ -234,7 +234,7 @@ Filter Nodes Helper
 -------------------
 
 We will create a function that receive a model class and some filter parameters like *name, country
-jurisdiction and source_id*. Then this functin will return a filtered nodeset contaning only the
+jurisdiction and source_id*. Then this function will return a filtered nodeset containing only the
 model nodes that pass our filters.
 
 Let's add this helper function to the ``utils.py``, with the name ``filter_nodes``::
@@ -305,7 +305,7 @@ Here a representation of the required dictionary keys::
         'page': 1
     }
 
-The ``limit`` and ``page`` filters are necesary to calculate the ``start`` and ``end`` values that
+The ``limit`` and ``page`` filters are necessary to calculate the ``start`` and ``end`` values that
 we will use to get a subset of nodes from a nodeset. 
 Just like we learned in the Fetching Nodes section, we will return the nodes in batches using
 slice python syntax on the nodeset.
@@ -349,6 +349,90 @@ Let's add this helper function to the ``utils.py``, with the name ``fetch_node_d
 
         return node_details
 
+Fetch countries, jurisdictions and data source helpers
+------------------------------------------------------
+
+As we are filtering the nodes by countries, jurisdictions and data source, we will need a list of 
+valid filtering values.
+
+First let's create a new python module under our ``paradise_papers_search/`` directory.
+Name the file as ``constants.py``. 
+
+We will fetch this data from the database, however, we are not going to use the models. Sometimes 
+it is convenient to make raw cypher queries to the database. Neomodel allows you to do that.
+
+In your ``constant.py`` module, import the database util 'db' from ``neomodel``::
+
+    from neomodel import db
+
+Now you can use the ``cypher_query`` method, to execute raw cypher queries and get the results.
+
+For example, we will query the countries, jurisdictions and data sources in the ``constants.py``::
+
+    countries = db.cypher_query(
+        '''
+        MATCH (n)
+        WHERE NOT n.countries CONTAINS ';'
+        RETURN DISTINCT n.countries AS countries
+        '''
+        )[0]
+
+    jurisdictions = db.cypher_query(
+        '''
+        MATCH (n)
+        RETURN DISTINCT n.jurisdiction AS jurisdiction
+        '''
+    )[0]
+
+    data_sources = db.cypher_query(
+        '''
+        MATCH (n)
+        RETURN DISTINCT n.sourceID AS dataSource
+        '''
+    )[0]
 
 
-...
+With the results we will make sorted lists of COUNTRIES, JURISDICTIONS and DATASOURCE::
+
+    COUNTRIES = sorted([country[0] for country in countries])
+    JURISDICTIONS = sorted([jurisdiction[0] for jurisdiction in jurisdictions if isinstance(jurisdiction[0], str)])
+    DATASOURCE = sorted([data_source[0] for data_source in data_sources if isinstance(data_source[0], str)])
+
+In the ``utils.py``, import COUNTRIES, JURISDICTIONS, DATASOURCE::
+
+    from paradise_papers_search.constants import COUNTRIES, JURISDICTIONS, DATASOURCE
+
+Then create ``fetch_countries``, ``fetch_jurisdictions`` and ``fetch_data_source`` helpers::
+
+    def fetch_countries():
+        return COUNTRIES
+
+
+    def fetch_jurisdictions():
+        return JURISDICTIONS
+
+
+    def fetch_data_source():
+        return DATASOURCE    
+
+We created the ``constants.py`` module because we want to make the cypher queries once. Not each
+time we call ``fetch_countries``, ``fetch_jurisdictions`` or ``fetch_data_source`` helpers.
+
+Since these query might take some time to execute, we want them ready at the start of the
+application. We can do that by executing the ``constants.py`` code.
+
+Open the ``fetch_api/app.py`` module. Add the ``ready`` method to the Django application class and
+import the ``constants.py`` module. That will be enough to initialize COUNTRIES, JURISDICTIONS 
+and DATASOURCE constants.
+
+Here how the ``fetch_api/app.py`` would look like::
+
+    from django.apps import AppConfig
+
+    class FetchApiConfig(AppConfig):
+        name = 'fetch_api'
+
+        def ready(self):
+            from paradise_papers_search import constants
+
+
