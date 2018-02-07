@@ -1,13 +1,15 @@
 from paradise_papers_search.constants import COUNTRIES, JURISDICTIONS, DATASOURCE
 
-from .models import Entity
-from .models import Intermediary
-from .models import Officer
-from .models import Address
-from .models import Other
-
-
 # ow for easily access each of the model classes programmatically, let's create a key-value map.
+from .models import (
+    Entity,
+    Address,
+    Intermediary,
+    Officer,
+    Other
+)
+
+
 MODEL_ENTITIES = {
     'Entity': Entity,
     'Address': Address,
@@ -15,6 +17,7 @@ MODEL_ENTITIES = {
     'Officer': Officer,
     'Other': Other
 }
+
 
 ###################################################################
 # Queries Functions
