@@ -7,8 +7,7 @@
 Welcome to Paradise Paper Search App's Django + Neomodel Tutorial!
 ===================================================================
 
-Overview
---------
+**Overview**
 
 The aim of this tutorial is to demonstrate how to develop a web application using the Django 
 framework backed by Neo4j, connecting them with the Neomodel driver. Neomodel is an Object Graph 
