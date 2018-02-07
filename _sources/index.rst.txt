@@ -37,7 +37,7 @@ not familiar with the definition of a node, it is a graphic data record. Here is
 
 In a graph database nodes are linked with each other with lines; they represent the relationship
 between them. This is call a `relationship`. On this application there are offshore entities that
-have a registered address; Therefore there is a relationship type called `REGISTERED_ADDRESS`. 
+ have a registered address; Therefore there is a relationship type called `REGISTERED_ADDRESS`. 
 
 .. image:: _static/rel_type.png
 	:width: 100%
