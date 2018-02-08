@@ -27,9 +27,10 @@ class NodeUtils:
         for row in results[0]:
             node = db.cypher_query(
                 '''
-                MATCH (n:%s) WHERE id(n) = %s RETURN n
+                MATCH (n:%s) WHERE n.node_id = %s RETURN n
                 '''
-            )%(node_type, row[1])
+                %(node_type, row[1])
+            )
             serialized_node = node.serialize
             serialized_node['node_relationship'] = row[0].type
             nodes.append(serialized_node)
